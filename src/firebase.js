@@ -2,20 +2,21 @@
 import { initializeApp } from 'firebase/app';
 import { getFirestore, doc, setDoc, getDoc, onSnapshot } from 'firebase/firestore';
 
-// Configuration Firebase (remplacer par vos propres clés)
+// Configuration Firebase (clés réelles)
 const firebaseConfig = {
-  apiKey: "demo-api-key",
-  authDomain: "demo-project.firebaseapp.com",
-  projectId: "demo-project",
-  storageBucket: "demo-project.appspot.com",
-  messagingSenderId: "123456789",
-  appId: "demo-app-id"
+  apiKey: "AIzaSyCokgD-y_M2rya-woXMhVKwpaRr-mBtyIg",
+  authDomain: "coordination-schools.firebaseapp.com",
+  projectId: "coordination-schools",
+  storageBucket: "coordination-schools.firebasestorage.app",
+  messagingSenderId: "745012743753",
+  appId: "1:745012743753:web:e982df2e0c17787ae13998",
+  measurementId: "G-THZDMYMP5C"
 };
 
 // Vérifier si la configuration Firebase est valide
 const isFirebaseConfigured = () => {
-  return firebaseConfig.apiKey !== "demo-api-key" && 
-         firebaseConfig.projectId !== "demo-project";
+  return firebaseConfig.apiKey && 
+         firebaseConfig.projectId === "coordination-schools";
 };
 
 // Initialiser Firebase
