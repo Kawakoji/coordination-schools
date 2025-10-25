@@ -10,6 +10,7 @@
     "start": "vite"
   },
   "dependencies": {
+    "firebase": "^12.4.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },
@@ -22,7 +23,13 @@
     "tailwindcss": "^3.3.6",
     "vite": "^5.0.8"
   },
-  "keywords": ["react", "tailwind", "coordination", "schools", "animators"],
+  "keywords": [
+    "react",
+    "tailwind",
+    "coordination",
+    "schools",
+    "animators"
+  ],
   "author": "Assistant IA",
   "license": "MIT",
   "type": "module"

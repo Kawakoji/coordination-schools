@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { saveSchoolsData, loadSchoolsData, subscribeToSchoolsData } from './firebase.js';
 
 /**
  * Application de coordination des animateurs pour 3 écoles
@@ -34,32 +35,74 @@ const CoordinationSchools = () => {
   // État pour les notifications
   const [notification, setNotification] = useState(null);
 
-  // Charger les données depuis localStorage au montage
+  // Charger les données depuis Firebase au montage
   useEffect(() => {
-    const loadData = () => {
+    const loadData = async () => {
       try {
-        const savedData = localStorage.getItem('coordination-schools');
-        if (savedData) {
-          const parsedData = JSON.parse(savedData);
-          setSchools(parsedData);
+        // Essayer Firebase d'abord
+        const firebaseData = await loadSchoolsData();
+        if (firebaseData) {
+          setSchools(firebaseData);
+          console.log('Données chargées depuis Firebase');
+        } else {
+          // Fallback vers localStorage si Firebase n'a pas de données
+          const savedData = localStorage.getItem('coordination-schools');
+          if (savedData) {
+            const parsedData = JSON.parse(savedData);
+            setSchools(parsedData);
+            console.log('Données chargées depuis localStorage (fallback)');
+          }
         }
       } catch (error) {
         console.error('Erreur lors du chargement des données:', error);
+        // Fallback vers localStorage en cas d'erreur Firebase
+        try {
+          const savedData = localStorage.getItem('coordination-schools');
+          if (savedData) {
+            const parsedData = JSON.parse(savedData);
+            setSchools(parsedData);
+          }
+        } catch (localError) {
+          console.error('Erreur localStorage:', localError);
+        }
       }
     };
 
     loadData();
   }, []);
 
-  // Auto-refresh toutes les 10 minutes (600000 ms)
+  // Synchronisation en temps réel avec Firebase
   useEffect(() => {
-    const interval = setInterval(() => {
-      // Recharger les données depuis localStorage
+    const unsubscribe = subscribeToSchoolsData((firebaseData) => {
+      if (firebaseData) {
+        setSchools(firebaseData);
+        console.log('Données synchronisées depuis Firebase en temps réel');
+      }
+    });
+
+    // Nettoyer l'écoute lors du démontage
+    return () => {
+      if (unsubscribe) {
+        unsubscribe();
+      }
+    };
+  }, []);
+
+  // Auto-refresh toutes les 10 minutes (fallback)
+  useEffect(() => {
+    const interval = setInterval(async () => {
       try {
-        const savedData = localStorage.getItem('coordination-schools');
-        if (savedData) {
-          const parsedData = JSON.parse(savedData);
-          setSchools(parsedData);
+        // Essayer Firebase d'abord
+        const firebaseData = await loadSchoolsData();
+        if (firebaseData) {
+          setSchools(firebaseData);
+        } else {
+          // Fallback vers localStorage
+          const savedData = localStorage.getItem('coordination-schools');
+          if (savedData) {
+            const parsedData = JSON.parse(savedData);
+            setSchools(parsedData);
+          }
         }
       } catch (error) {
         console.error('Erreur lors du rafraîchissement:', error);
@@ -148,13 +191,26 @@ const CoordinationSchools = () => {
   }, [schools]);
 
   // Sauvegarder les données
-  const saveData = () => {
+  const saveData = async () => {
     try {
+      // Sauvegarder sur Firebase
+      await saveSchoolsData(schools);
+      
+      // Sauvegarder aussi en local comme backup
       localStorage.setItem('coordination-schools', JSON.stringify(schools));
-      alert('Données sauvegardées avec succès !');
+      
+      alert('Données sauvegardées avec succès ! (Synchronisées sur tous les appareils)');
     } catch (error) {
-      console.error('Erreur lors de la sauvegarde:', error);
-      alert('Erreur lors de la sauvegarde');
+      console.error('Erreur lors de la sauvegarde Firebase:', error);
+      
+      // Fallback vers localStorage
+      try {
+        localStorage.setItem('coordination-schools', JSON.stringify(schools));
+        alert('Données sauvegardées localement (Firebase indisponible)');
+      } catch (localError) {
+        console.error('Erreur localStorage:', localError);
+        alert('Erreur lors de la sauvegarde');
+      }
     }
   };
 
@@ -364,9 +420,9 @@ const CoordinationSchools = () => {
 
         {/* Informations de debug (optionnel) */}
         <div className="mt-8 p-4 bg-gray-100 rounded-lg">
-          <h3 className="text-sm font-medium text-gray-700 mb-2">Informations de debug :</h3>
+          <h3 className="text-sm font-medium text-gray-700 mb-2">Informations de synchronisation :</h3>
           <p className="text-xs text-gray-600">
-            Auto-refresh activé (toutes les 10 minutes) • Données sauvegardées dans localStorage
+            🔄 Synchronisation en temps réel avec Firebase • 📱 Modifications visibles sur tous les appareils • 💾 Backup localStorage
           </p>
         </div>
       </div>
